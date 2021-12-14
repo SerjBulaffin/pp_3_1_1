@@ -38,31 +38,28 @@ public class AdminController {
         return "login";
     }
 
-    //@GetMapping("/admin")
-    @RequestMapping(value = "/admin", method = RequestMethod.GET)
+    @GetMapping("/admin")
     public String userList(Model model) {
         model.addAttribute("allUsers", userDetailsService.getAllUsers());
         return "admin";
     }
 
     @GetMapping("/admin/user/{id}")
-    //@RequestMapping(value = "/admin/user/{id}", method = RequestMethod.GET)
     public String userPageByID(@PathVariable("id") Long id, Model model) {
         User user = userDetailsService.getUser(id);
-        user.getRoles().size();
+        //user.getRoles().size();
         model.addAttribute("user", user);
 
         return "user";
     }
 
-    //Добавление нового пользователя
+    //Добавление нового пользователя get запрос
     @GetMapping("/admin/new")
-    //@RequestMapping(value = "/admin/new", method = RequestMethod.GET)
     public String newUser(@ModelAttribute("newUser") User user) {
         return "new";
     }
 
-
+    //добавление нового пользователя post запрос
     @PostMapping()
     public String createUser(@ModelAttribute("newUser") User user,
                              @RequestParam(value = "nameRoles", required = false) String[] nameRoles) {
@@ -72,7 +69,6 @@ public class AdminController {
             return "error_add_user";
         }
 
-        //user.getRoles();
         //если пользователь с таким именем существует возвращаемся в админку
         if (userDetailsService.getUserByFirstName(user.getFirstName()) != null) {
             return "redirect:/admin";
@@ -91,18 +87,14 @@ public class AdminController {
         }
 
         user.setRoles(roleSet);
-
-        System.out.println("Temp output " + user);
-
         userDetailsService.addUpdateUser(user);
 
         return "redirect:/admin";
     }
-    //окончание добавления пользователя
 
     //Удаление пользователя
     @DeleteMapping("/{id}")
-    public String deletUser(@PathVariable("id") Long id) {
+    public String deleteUser(@PathVariable("id") Long id) {
         userDetailsService.removeUserById(id);
         return "redirect:/admin";
     }
@@ -114,6 +106,7 @@ public class AdminController {
 
         List<String> roleAdmin = new ArrayList<>(2);
         List<String> roleTmp = user.getRoles().stream().map(r -> r.getRole()).collect(Collectors.toList());
+        model.addAttribute("roleAdmin", roleAdmin);
 
         if (roleTmp.contains("ROLE_USER")) {
             roleAdmin.add(0, "checked");
@@ -127,8 +120,8 @@ public class AdminController {
             roleAdmin.add(1, null);
         }
 
-        model.addAttribute("roleAdmin", roleAdmin);
         model.addAttribute("editUser", user);
+
         return "edit";
     }
 
@@ -139,7 +132,7 @@ public class AdminController {
 
         final String oldPassword = userDetailsService.getUser(id).getPassword();
 
-        if (user.getPassword().isEmpty()) {
+        if (user.getPassword().isEmpty() | user.getPassword().equals(oldPassword)) {
             user.setPassword(oldPassword);
         } else {
             user.setPassword(passwordEncoder.encode(user.getPassword()));
@@ -153,7 +146,6 @@ public class AdminController {
         }
 
         user.setRoles(roleSet);
-        //user.setId(id);
 
         userDetailsService.addUpdateUser(user);
         return "redirect:/admin";
